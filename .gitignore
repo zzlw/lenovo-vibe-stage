@@ -7,6 +7,7 @@ node_modules/
 .idea/
 .vercel
 .railway
+.neon
 
 # reports/ 完全本地化：subagent 生成的所有报告（含 README、占位文件）均不入库
 /reports/
