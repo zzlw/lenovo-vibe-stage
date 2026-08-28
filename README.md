@@ -30,18 +30,20 @@ cd lenovo-vibe-stage
 
 ---
 
-## 云端部署（Vercel + Railway）
+## 云端部署（Vercel + Render + Neon）
 
-生产与 [aftersales-agent](https://github.com/zzlw/aftersales-agent) 相同：前端 Vercel，后端 + PostgreSQL 在 Railway；`main` push 后两边各自自动部署。
+免费档：前端 Vercel，后端 Render 容器，数据库 Neon Postgres。Railway / Koyeb 试用或控制台不可用时走这一套。
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/zzlw/lenovo-vibe-stage)
 
 | 环节 | 平台 | 说明 |
 |---|---|---|
 | 代码托管 | GitHub（本仓库，MIT） | `main` 为生产分支 |
-| 前端 | Vercel | Root Directory = `frontend/`；`BACKEND_URL` 指向 Railway 公网域名 |
-| 后端 | Railway 容器 | `Dockerfile.railway`；健康检查 `/healthz` |
-| 数据库 | Railway PostgreSQL | 注入 `DATABASE_URL`；启动时 `ensureSchema()` 幂等建表 |
+| 前端 | Vercel | Root Directory = `frontend/`；`BACKEND_URL` 指向 Render 公网域名 |
+| 后端 | Render 免费 Web Service | `Dockerfile.railway` + `render.yaml`；空闲 15 分钟会休眠 |
+| 数据库 | Neon PostgreSQL 16 | 注入 `DATABASE_URL`；启动时 `ensureSchema()` 幂等建表 |
 
-Vercel 项目环境变量：`BACKEND_URL=https://<railway-backend-domain>`（不要末尾斜杠）。Railway 后端连库只需要插件注入的 `DATABASE_URL`。
+Render 创建时会提示填写 `DATABASE_URL`（从 Neon 控制台复制，带 `sslmode=require`）。Vercel 环境变量：`BACKEND_URL=https://<render-service>.onrender.com`（不要末尾斜杠）。
 
 ---
 

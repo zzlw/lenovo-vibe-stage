@@ -31,8 +31,8 @@
 | DB | PostgreSQL | 16-alpine | UNIQUE/事务/参数化 |
 | Web | Nginx | 1.27-alpine | 本地反代 /api → backend |
 | Orch | Docker Compose | v2 | 本地一键启动，不用 Swarm/K8s |
-| 生产前端 | Vercel | 静态 + Edge | `frontend/`；`/api/*` 代理到 Railway |
-| 生产后端 | Railway | Node 20 | `Dockerfile.railway` + PostgreSQL 16 |
+| 生产前端 | Vercel | 静态 + Edge | `frontend/`；`/api/*` 代理到 Render |
+| 生产后端 | Render | Node 20 | 免费 Web Service + Neon PostgreSQL 16 |
 
 ---
 
@@ -126,7 +126,7 @@ docker compose down
 | 健康检查 | http://<LAN_IP>:8080/readyz |
 | API 文档式 | `/api/people`、`/api/picks`、`/api/stats`、`/api/commitments`、`/api/server-info` |
 
-生产（Vercel + Railway）：前端 Root Directory = `frontend/`，环境变量 `BACKEND_URL` 指向 Railway 公网域名；后端只吃 `DATABASE_URL`。
+生产（Vercel + Render + Neon）：前端 Root Directory = `frontend/`，环境变量 `BACKEND_URL` 指向 Render 公网域名；后端只吃 `DATABASE_URL`。
 
 ---
 
