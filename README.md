@@ -1,6 +1,7 @@
 # Lenovo Vibe Stage · Vibe Coding 工程化样板
 
 <p align="left">
+  <a href="https://lenovo-vibe-stage.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-online-success?logo=vercel&logoColor=white" alt="Live Demo"></a>
   <a href="https://github.com/zzlw/lenovo-vibe-stage"><img src="https://img.shields.io/badge/GitHub-zzlw%2Flenovo-vibe-stage-181717?logo=github&logoColor=white" alt="GitHub"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License: MIT"></a>
   <a href="https://github.com/zzlw/lenovo-vibe-stage/commits/main"><img src="https://img.shields.io/github/last-commit/zzlw/lenovo-vibe-stage?logo=git&logoColor=white" alt="Last Commit"></a>
@@ -8,9 +9,11 @@
 
 > Lenovo 大前端团队 Vibe Coding 工程化分享会的"舞台"——PPT + 现场互动（录入 / 抽人 / 承诺墙）+ 4 招工程化样板（CLAUDE.md / Cursor Rules / MCP / Hooks + Subagent）一站全有。
 >
-> **整个分享会只有一个 URL**。PPT、录入弹窗、抽人弹窗、承诺墙弹窗都在 `frontend/index.html` 里。后端 Node.js + PostgreSQL + Docker Compose 一键启动。
+> **整个分享会只有一个 URL**。PPT、录入弹窗、抽人弹窗、承诺墙弹窗都在 `frontend/index.html` 里。
 >
-> 生产环境：Vercel（前端）+ Railway（后端 + PostgreSQL），与 [aftersales-agent](https://github.com/zzlw/aftersales-agent) 同一套拆分。
+> 🚀 **在线演示**：https://lenovo-vibe-stage.vercel.app
+>
+> 生产环境：Vercel（前端）+ Render（后端）+ Neon（PostgreSQL）。
 
 📦 **开源仓库**：<https://github.com/zzlw/lenovo-vibe-stage>
 
@@ -43,7 +46,7 @@ cd lenovo-vibe-stage
 | 后端 | Render 免费 Web Service | `Dockerfile.railway` + `render.yaml`；空闲 15 分钟会休眠 |
 | 数据库 | Neon PostgreSQL 16 | 注入 `DATABASE_URL`；启动时 `ensureSchema()` 幂等建表 |
 
-Render 创建时会提示填写 `DATABASE_URL`（从 Neon 控制台复制，带 `sslmode=require`）。Vercel 环境变量：`BACKEND_URL=https://<render-service>.onrender.com`（不要末尾斜杠）。
+Render 服务已部署：`https://lenovo-vibe-stage-api.onrender.com`。Vercel 环境变量 `BACKEND_URL` 指向该地址。免费档空闲约 15 分钟会休眠，第一次打开可能要等几十秒。
 
 ---
 
