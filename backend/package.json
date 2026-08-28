@@ -1,0 +1,18 @@
+{
+  "name": "lenovo-vibe-stage-backend",
+  "version": "1.0.0",
+  "description": "Lenovo Vibe Stage · Vibe Coding 工程化 Demo · 后端 API",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "pg": "^8.13.0"
+  }
+}

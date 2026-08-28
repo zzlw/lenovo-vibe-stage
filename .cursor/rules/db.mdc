@@ -1,0 +1,54 @@
+---
+description: 数据库 Schema / SQL / 迁移 的约定（涉及 DB 的代码触发）
+globs:
+  - "backend/src/db.js"
+  - "backend/src/**/sql/**"
+alwaysApply: false
+---
+
+# Database Rules
+
+## Schema 设计
+
+- 主键：`id BIGSERIAL PRIMARY KEY`（不要 UUID，Demo 项目）
+- 时间戳：`created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`、按需 `updated_at`
+- 字段名：`snake_case`（`picked_at`，不要 `pickedAt`）
+- 字符串大小：`VARCHAR(N)`（`name VARCHAR(64)`），不要无限制 `TEXT` 除非真的需要
+
+## 约束
+
+- **必须显式声明**：`NOT NULL`、`UNIQUE`、`CHECK`、外键 `REFERENCES ... ON DELETE ...`
+- 例：
+
+```sql
+CREATE TABLE IF NOT EXISTS people (
+  id          BIGSERIAL    PRIMARY KEY,
+  name        VARCHAR(64)  NOT NULL UNIQUE,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+```
+
+## 迁移 = 幂等
+
+- 只在 `db.ensureSchema()` 里走 `CREATE TABLE IF NOT EXISTS`。
+- 改字段时用 `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`（PG 9.6+）。
+- **不要**写 `DROP TABLE` / 破坏性 SQL 在 ensureSchema 里。
+- 真正生产迁移建议走 `node-pg-migrate` 或 `flyway`（本 Demo 不上）。
+
+## 事务
+
+- "先读后写" / 多行联动写 = **必须**事务（见 `db.pickPeople`）
+- 简单单行查询/插入 = 直接 `pool.query` 即可
+- 绝对不要混用 `pool.query` 和 `client.query` 在同一事务里
+
+## 性能
+
+- 高频查询字段加索引：`CREATE INDEX IF NOT EXISTS ...`
+- `LIMIT` 一定要带（防意外大查询）
+- 排序用索引覆盖（`ORDER BY id DESC` 比 `ORDER BY created_at DESC` 更快，因为 id 自带索引）
+
+## 安全
+
+- 任何字符串拼接进 SQL = 立刻失败 review
+- 输入校验在 routes 层完成；db 层默认输入合法
+- 错误：直接 throw，不要在 db.js 里 `console.error` + 吞掉

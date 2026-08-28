@@ -1,0 +1,72 @@
+# Lenovo Vibe Stage · 三层服务编排（PPT + 录入 + 抽人 + 承诺墙）
+# 一键启动:  ./start.sh   # 自动探测 LAN_IP
+# 手动启动:  docker compose up -d
+# 一键停止:  docker compose down
+# 销毁数据:  docker compose down -v
+
+# 显式指定 project 名，目录改名也不会丢数据卷
+name: lenovo-vibe-stage
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: lenovo-vibe-stage-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-roster}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-roster_pwd}
+      POSTGRES_DB: ${POSTGRES_DB:-roster}
+      TZ: Asia/Shanghai
+    volumes:
+      # 显式 name 避免随 compose project 名字漂移；老 demo-project_pgdata 也兼容
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-roster} -d $${POSTGRES_DB:-roster}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks: [stage-net]
+
+  backend:
+    build:
+      context: ./backend
+    container_name: lenovo-vibe-stage-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER:-roster}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-roster_pwd}
+      PGDATABASE: ${POSTGRES_DB:-roster}
+      TZ: Asia/Shanghai
+      # 宿主机的局域网 IP（用于生成手机能扫的二维码）
+      # 启动前 export LAN_IP=$(ipconfig getifaddr en0) 或写入 .env
+      LAN_IP: ${LAN_IP:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [stage-net]
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: lenovo-vibe-stage-frontend
+    restart: unless-stopped
+    ports:
+      - "${PUBLIC_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [stage-net]
+
+volumes:
+  pgdata:
+    # 显式外部 name，让目录改名/迁移不丢数据；想从空开始就 docker volume rm lenovo-vibe-stage-pgdata
+    name: lenovo-vibe-stage-pgdata
+
+networks:
+  stage-net:
+    driver: bridge

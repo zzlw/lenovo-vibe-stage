@@ -1,0 +1,68 @@
+{
+  "_comment_about_this_file": [
+    "本文件是 Lenovo Vibe Stage 项目的 MCP（Model Context Protocol）配置示范。",
+    "今天的分享会演示了 MCP 思想，明天的实战工作坊不用 MCP（保持环境简单）。",
+    "实际启用某个 server 时，把那段的 'enabled' 改 true，并按需配 args/env。",
+    "三条铁律：①只读账号 ②测试库 ③绝不连生产。"
+  ],
+
+  "mcpServers": {
+    "_browser_about": "Browser MCP · 让 AI 自己打开浏览器看 PPT / 截图 debug 前端",
+    "browser": {
+      "enabled": false,
+      "command": "npx",
+      "args": ["-y", "@browsermcp/mcp@latest"],
+      "_use_case": "AI 提交 PR 后让它自己打开 http://localhost:8080 截图验证"
+    },
+
+    "_postgres_about": "PostgreSQL MCP · 让 AI 直接读 schema 和测试库的数据",
+    "postgres": {
+      "enabled": false,
+      "command": "npx",
+      "args": [
+        "-y", "@modelcontextprotocol/server-postgres",
+        "postgresql://roster_readonly:CHANGE_ME@localhost:15432/roster"
+      ],
+      "_use_case_examples": [
+        "改 schema 时让 AI 自己 SELECT 一下当前表结构",
+        "查最近 24 小时新加的 roster 名字数量"
+      ],
+      "_security": "用 readonly 账号 + 测试库副本，宿主机端口 15432 暴露用 docker run 单独跑"
+    },
+
+    "_filesystem_about": "Filesystem MCP · 限定 AI 只能在项目目录内读写",
+    "filesystem": {
+      "enabled": false,
+      "command": "npx",
+      "args": [
+        "-y", "@modelcontextprotocol/server-filesystem",
+        "/path/to/your/projects/lenovo-vibe-stage"
+      ],
+      "_security": "只授权一个目录，避免 AI 漫游全盘"
+    },
+
+    "_github_about": "GitHub MCP · 让 AI 自己开 PR / 写 release notes / 处理 issue",
+    "github": {
+      "enabled": false,
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_REPLACE_WITH_LIMITED_SCOPE_TOKEN"
+      },
+      "_security": "Token 只给 repo:read 和单个 repo 的 PR write，绝不要给 admin"
+    },
+
+    "_jira_about": "Jira MCP · Lenovo 内部对接（按需要配企业 endpoint）",
+    "jira": {
+      "enabled": false,
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-atlassian"],
+      "env": {
+        "ATLASSIAN_BASE_URL": "https://lenovo.atlassian.net",
+        "ATLASSIAN_USERNAME": "zhangzl39@lenovo.com",
+        "ATLASSIAN_API_TOKEN": "REPLACE_WITH_API_TOKEN"
+      },
+      "_use_case": "AI 读 Story → 按需求写代码 → 写更新到 ticket"
+    }
+  }
+}

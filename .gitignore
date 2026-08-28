@@ -1,0 +1,32 @@
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+.vscode/
+.idea/
+.vercel
+.railway
+
+# reports/ 完全本地化：subagent 生成的所有报告（含 README、占位文件）均不入库
+/reports/
+
+# ─────────────────────────────────────────────────────────────────
+# Claude Code 工程化目录 ignore 政策（参考 Anthropic 官方 + 社区最佳实践）
+# 原则：人手写的配置入库（团队共享），运行时累积的文件不入库（个人本地）
+# ─────────────────────────────────────────────────────────────────
+
+# 个人覆盖配置（Claude Code 官方明确：per-machine override，绝不入库）
+.claude/settings.local.json
+
+# 会话/检查点/缓存（运行时累积，规模会快速膨胀）
+.claude/conversations/
+.claude/sessions/
+.claude/checkpoints/
+.claude/skills/.cache/
+.claude/skills/*.log
+
+# subagent 跨会话记忆（运行时累积：违规模式记录、审查时间戳、健康度评分）
+# 静态规范（项目红线、高风险文件清单）应迁移到 CLAUDE.md 或 agent system prompt
+.claude/agent-memory/
+.claude/agent-memory-local/

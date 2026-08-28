@@ -1,0 +1,77 @@
+---
+description: Frontend 单文件 PPT + 弹窗的约定（仅 frontend 目录触发）
+globs:
+  - "frontend/**/*.html"
+  - "frontend/**/*.css"
+  - "frontend/**/*.js"
+alwaysApply: false
+---
+
+# Frontend Rules
+
+## 单文件原则
+
+- 所有 CSS 和 JS **内联**在 `index.html` 的 `<style>` / `<script>` 里。
+- 不要再创建 `shared.css` / `shared.js` / 其它独立 html 页面。
+- 例外（合理依赖）：CDN 引入 `qrcodejs` 和 `html2pdf.js`。
+
+## 颜色变量
+
+- **不要**写 hex / rgb 直接颜色。一定用 CSS 变量：
+
+```css
+/* ✅ */
+color: var(--lenovo);
+background: var(--bg-1);
+border: 1px solid var(--border);
+
+/* ❌ */
+color: #E2231A;
+background: #0f1424;
+```
+
+- 颜色变量定义在 `:root`：`--bg-0/1/2`、`--fg`、`--muted`、`--primary`、`--primary-2`、`--accent`、`--lenovo`、`--lenovo-2`、`--green`、`--yellow`、`--red`。
+
+## 字体
+
+- 系统字体优先（`-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei"...`）
+- 等宽场合用 `"JetBrains Mono", "SF Mono", Menlo, monospace`
+- 不要引入 Google Fonts（CDN 不稳，离线挂掉）
+
+## 弹窗 / Modal
+
+- 所有 modal 必须：
+  1. 暗色遮罩 + 中央卡片
+  2. ESC 键关闭
+  3. 点遮罩关闭（`onclick="modalBackdropClick(event, '...')"`）
+  4. URL hash 路由（`#enroll` / `#pick` / `#commit`）
+  5. 关闭时还原 hash 到当前 slide
+- 新增 modal 时复用样式：`.modal-overlay` / `.modal-card` / `.modal-head` / `.modal-h1` / `.modal-lead` / `.modal-close`
+- 大小走 `.size-XXX`（`size-enroll`、`size-pick`、`size-commit`）
+
+## API 调用
+
+- 用顶部的 `apiCall(path, opts)`，**不要**散落 `fetch`：
+
+```js
+const r = await apiCall('/people');
+await apiCall('/picks', { method: 'POST', body: JSON.stringify({ count: 1 }) });
+```
+
+- 错误统一抛 `Error` 带 `.status`，由调用处决定怎么提示。
+
+## 二维码 / LAN_IP
+
+- 二维码 URL 必须能让"手机"访问到，**不要** `localhost` / `127.0.0.1`。
+- 走 `resolveEnrollUrl()` 这种 helper：先看 `window.location.hostname`，再回退到 `/api/server-info`。
+- 任何新加的"扫码进入" 弹窗都要这么做。
+
+## 不要
+
+- ❌ 不要 `alert/confirm/prompt`（用 `enrollToast` 或在 modal 内做确认 UI）
+- ❌ 不要 `<script>` 引入框架（React/Vue/jQuery）
+- ❌ 不要硬编码 8080/3000 端口（用 `window.location.port`）
+- ❌ 不要在 `<button onclick="..."></button>` 里写超过 1 行的逻辑（写函数）
+
+## 语法规范
+- js css html全部拥抱最新的2026年语法规范，不用考虑兼容性

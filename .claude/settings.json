@@ -1,0 +1,144 @@
+{
+  "_about": [
+    "Claude Code 项目级配置。",
+    "- 在仓库根目录的 .claude/settings.json 会覆盖个人 ~/.claude/settings.json 的同名 hook。",
+    "- 团队约定的 hooks 都放这里，提交进 Git，新人拉代码就有。",
+    "- 个人偏好（如 'on session start 给我泡杯咖啡'）放在 ~/.claude/settings.json"
+  ],
+
+  "hooks": {
+    "_PreToolUse_about": "Claude 即将使用某个工具前触发。可以用来拦截危险操作。",
+    "PreToolUse": [
+      {
+        "matcher": {
+          "tool_name": "Bash",
+          "command_regex": "(rm\\s+-rf\\s+/|drop\\s+(table|database)|truncate|docker\\s+(volume|system)\\s+prune)"
+        },
+        "command": "echo '🔴 拦截到危险命令，需要二次确认' && exit 1"
+      }
+    ],
+
+    "_PostToolUse_about": "Claude 用完工具后触发。常见用法：保存即审查 + 提示召唤 subagent。",
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "Edit",
+          "file_path_regex": "backend/src/.*\\.js$"
+        },
+        "command": "cd \"$CLAUDE_PROJECT_DIR\" && (test -f backend/package.json && cd backend && node --check src/$(basename $CLAUDE_FILE_PATH)) || true",
+        "_what_it_does": "改完后端 JS 文件，自动 syntax check（不阻塞）"
+      },
+      {
+        "matcher": {
+          "tool_name": "Edit",
+          "file_path_regex": "(backend/src/.*\\.js|frontend/index\\.html)$"
+        },
+        "command": "echo '💡 改完核心文件，建议召唤 @code-reviewer 自检一次（成本低 < 30s）' >&2",
+        "_what_it_does": "提示主动用 code-reviewer 兜底"
+      },
+      {
+        "matcher": {
+          "tool_name": "Edit",
+          "file_path_regex": "backend/src/routes\\.js$"
+        },
+        "command": "echo '💡 改了 routes.js，新增/调整 endpoint 时考虑召唤 @api-designer 验证设计' >&2",
+        "_what_it_does": "提示路由变更走 api-designer"
+      }
+    ],
+
+    "_SubagentStart_about": "subagent 开始执行时触发。屏幕给出明确切换提示，演示时观众一眼分辨。",
+    "SubagentStart": [
+      {
+        "matcher": "code-reviewer",
+        "command": "echo '🔴 [code-reviewer] 严苛审查员上场——sonnet · 只读模式，准备挑刺...' >&2"
+      },
+      {
+        "matcher": "api-designer",
+        "command": "echo '🔵 [api-designer] API 设计师上场——sonnet · 只读模式，先问必要性再谈路径...' >&2"
+      },
+      {
+        "matcher": "commit-maker",
+        "command": "echo '🟢 [commit-maker] Commit 写手上场——haiku · 只生成消息不执行 commit...' >&2"
+      },
+      {
+        "matcher": "test-writer",
+        "command": "echo '🟡 [test-writer] 测试写手上场——haiku · 用 node:test 不引第三方 · 只写 backend/test/...' >&2"
+      },
+      {
+        "matcher": "report-writer",
+        "command": "echo '🟣 [report-writer] 汇报转译官上场——sonnet · 从 git log 抽数据 · 只写 reports/ · 自动打码机密...' >&2"
+      },
+      {
+        "matcher": "branch-namer",
+        "command": "echo '🔵 [branch-namer] 分支命名师上场——haiku · 只生成名字不切分支 · 严守 Conventional Branch 规范...' >&2"
+      },
+      {
+        "matcher": "html-previewer",
+        "command": "echo '🌸 [html-previewer] 视觉走查员上场——sonnet · 只读模式 · 自动起 docker + 浏览器巡检 11 张 slide + 3 个弹窗 · 不改任何文件...' >&2"
+      }
+    ],
+
+    "_SubagentStop_about": "subagent 完成时触发。给主对话一个明确收尾信号，提醒人类下一步。",
+    "SubagentStop": [
+      {
+        "matcher": "code-reviewer",
+        "command": "echo '✅ [code-reviewer] 审查完成。下一步：① 把 🔴 标的改了 ② 决定要不要把 🟡 也顺手改 ③ 跑 docker compose up -d --build 验证' >&2"
+      },
+      {
+        "matcher": "api-designer",
+        "command": "echo '✅ [api-designer] 设计完成。下一步：① 人类拍板设计 ② 召唤主对话 / 通用 agent 实现 ③ 同步更新 README API 速查表' >&2"
+      },
+      {
+        "matcher": "commit-maker",
+        "command": "echo '✅ [commit-maker] 消息已生成。下一步：复制消息 → 自己执行 git commit -m \"...\"（commit-maker 不会替你提交）' >&2"
+      },
+      {
+        "matcher": "test-writer",
+        "command": "echo '✅ [test-writer] 测试已写。下一步：① 跑 node --test backend/test/ 全量验证 ② 失败的 case 召唤 @code-reviewer 看是否暴露 bug' >&2"
+      },
+      {
+        "matcher": "report-writer",
+        "command": "echo '✅ [report-writer] 报告已生成到 reports/。下一步：① 检查机密打码是否到位 ② 复制\"群里发布版本\"粘贴到飞书/钉钉' >&2"
+      },
+      {
+        "matcher": "branch-namer",
+        "command": "echo '✅ [branch-namer] 分支名已生成。下一步：① 确认 base 分支正确（一般是 main） ② 复制 git checkout -b ... 命令自己执行 ③ 接着召唤 @commit-maker 写第一个 commit' >&2"
+      },
+      {
+        "matcher": "html-previewer",
+        "command": "echo '✅ [html-previewer] 视觉走查完成。下一步：① 看 previews/<时间戳>/ 下截图 ② 🔴/🟡 项召唤 @code-reviewer 看 frontend/index.html ③ 二维码 URL 若是 localhost 检查 LAN_IP 注入' >&2"
+      }
+    ],
+
+    "_Stop_about": "Claude 一轮对话结束时触发。常见：自动 commit / 跑测试 / 截图。",
+    "Stop": [
+      {
+        "matcher": {},
+        "command": "echo '✅ 本轮变更建议过一遍：①是否符合 CLAUDE.md ②是否需要更新 .cursor/rules/ ③docker compose up -d --build 验证 ④若改了 backend/src 或 frontend/index.html 还没跑过 @code-reviewer，强烈建议补一次'",
+        "_what_it_does": "每轮收尾给 reviewer 一份 checklist"
+      }
+    ],
+
+    "_UserPromptSubmit_about": "用户每次发送 prompt 前触发。可以用来注入项目元信息。",
+    "UserPromptSubmit": [
+      {
+        "matcher": {},
+        "command": "echo '[ctx] Lenovo Vibe Stage · 工程化分享 Demo · 改任何文件前先读 CLAUDE.md · 7 个 subagent 可用：@code-reviewer / @api-designer / @commit-maker / @test-writer / @report-writer / @branch-namer / @html-previewer'",
+        "_what_it_does": "在每条 prompt 后追加项目自我介绍 + subagent 名录"
+      }
+    ]
+  },
+
+  "_subagents_about": [
+    "项目级 subagent 定义放在 .claude/agents/*.md，每个文件就是一个 agent。",
+    "本仓库已有 7 个，全部按 Anthropic 官方 v2.x 最佳实践配置：",
+    "- code-reviewer  · sonnet · red    · memory:project · 严苛审查（只读，禁 Edit/Write）",
+    "- api-designer   · sonnet · cyan   ·                · 设计 REST API（只读 + 禁 Bash，纯设计不实现）",
+    "- commit-maker   · haiku  · green  ·                · 生成 Conventional Commits 消息（只读 Bash，不执行 commit）",
+    "- test-writer    · haiku  · yellow · memory:project · 用 node:test 补单测（只写 backend/test/，不引第三方）",
+    "- report-writer  · sonnet · purple · memory:project · 日报/周报/Sprint Review/Changelog（只写 reports/，自动机密打码）",
+    "- branch-namer   · haiku  · blue   ·                · 生成 Conventional Branch 分支名（只读 Bash，不执行 checkout）",
+    "- html-previewer · sonnet · pink   · memory:project · PPT 视觉走查（自动 docker up + cursor-ide-browser MCP 截图 14 张，禁 Edit/Write）",
+    "全部设了 maxTurns 防失控 + disallowedTools 最小权限；详见 .claude/agents/*.md frontmatter。"
+  ]
+}

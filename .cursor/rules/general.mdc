@@ -1,0 +1,41 @@
+---
+description: Lenovo Vibe Stage · 全局团队约定（所有文件都触发）
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Lenovo Vibe Stage · 全局规则
+
+> 这是 .cursor/rules/general.mdc，对项目所有文件生效。
+> 个人偏好（用什么语气、解释多详细）请放在 Cursor → Settings → Rules for AI；这里只放**团队约定**。
+
+## 沟通
+
+- 中文回答（除非代码本身要求英文）
+- 错了就直说错，不要"也许""可能" 兜底
+- 提交信息走 [Conventional Commits](https://www.conventionalcommits.org/)（feat / fix / refactor / docs / chore / perf / test）
+
+## 代码
+
+- 修改文件前**先读现有内容**，再做最小化修改。**不要全文重写**。
+- 不要为了"清理"而改与本次任务无关的代码。
+- 删除的代码不要加 `// 已删除` 类注释——git 会记住。
+- 不要写"为什么这么做" 在注释里——除非真的非显然。注释只解释 **why**，不复读 **what**。
+
+## 安全
+
+- 所有输入必须校验（见 `backend/src/routes.js` 的 `validateName`）。
+- 任何新加的对外 endpoint 必须考虑：
+  1. 输入合法吗？
+  2. 出错时返回什么？
+  3. 有没有暴露内部错误堆栈给客户端？
+
+## 不要
+
+- ❌ 不要新增依赖（除非确实没办法 / 已经讨论过）
+- ❌ 不要在前端硬编码 IP/端口/URL
+- ❌ 不要用 `alert/confirm/prompt`
+- ❌ 不要用 `any`（如果以后切 TS 的话）
+
+参见根目录 `CLAUDE.md` 的 §4 红线清单。

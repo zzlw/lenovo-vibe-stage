@@ -1,0 +1,80 @@
+---
+description: Backend Node.js + Express + pg 的约定（仅 backend 目录触发）
+globs:
+  - "backend/**/*.js"
+  - "backend/**/*.json"
+alwaysApply: false
+---
+
+# Backend Rules
+
+## ESM 强制
+
+- `backend/package.json` 已设 `"type": "module"`。
+- 用 `import`/`export`，**不要** `require`。
+- 引入本地文件时**必须**写 `.js` 后缀（`import db from './db.js'`），不要省略。
+
+## Express 路由
+
+- 所有 router 用 `next(err)` 把异常往全局错误中间件冒泡，**不要在路由里自己 try/catch + res.status(500)**。
+- 业务异常构造方式：
+
+```js
+const err = new Error('这条消息会回给客户端');
+err.status = 409;            // 业务码
+throw err;
+```
+
+- 成功返回统一格式：`res.json({ code: 0, data: ... })`。
+- 失败返回统一格式：`res.status(4xx/5xx).json({ code: 1xxx, message: '...' })`。
+- 输入校验放路由入口（见 `validateName`）。**db 层默认输入合法**。
+
+## pg / 事务 / 参数化
+
+- 一切 SQL **必须**参数化：
+
+```js
+// ✅
+await pool.query('SELECT * FROM people WHERE name = $1', [name]);
+
+// ❌ 永远不要
+await pool.query(`SELECT * FROM people WHERE name = '${name}'`);
+```
+
+- 涉及"先读后写"的操作必须事务保护（见 `db.pickPeople`）：
+
+```js
+const client = await pool.connect();
+try {
+  await client.query('BEGIN');
+  // ... 业务
+  await client.query('COMMIT');
+} catch (e) {
+  await client.query('ROLLBACK');
+  throw e;
+} finally {
+  client.release();
+}
+```
+
+## 健康检查
+
+- `/healthz` = 进程活着就 ok（liveness probe）
+- `/readyz`  = 必须真的能 `SELECT 1` 才 ok（readiness probe）
+- 不要把 `/healthz` 也带 DB ping，否则 DB 慢会被 K8s 误杀。
+
+## 优雅关闭
+
+- 监听 `SIGTERM` / `SIGINT`，做：
+  1. 关 HTTP server（不再接新请求）
+  2. 等正在处理的请求完成（最多 10 秒）
+  3. 释放 pg pool
+  4. exit 0
+- 见 `index.js` 末尾。
+
+## 不要
+
+- ❌ 不要引入 ORM（knex / sequelize / prisma）—— Demo 哲学：让 SQL 显式
+- ❌ 不要引入日志库（winston / pino）—— `console.log/error` 够用
+- ❌ 不要引入 nodemon / pm2 —— `node --watch`（Node 20 自带）够用
+- ❌ 不要在 `routes.js` 里写 SQL —— 走 `db.js`
