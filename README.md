@@ -1,8 +1,8 @@
 # Lenovo Vibe Stage · Vibe Coding 工程化样板
 
 <p align="left">
-  <a href="https://lenovo-vibe-stage.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-online-success?logo=vercel&logoColor=white" alt="Live Demo"></a>
-  <a href="https://github.com/zzlw/lenovo-vibe-stage"><img src="https://img.shields.io/badge/GitHub-zzlw%2Flenovo-vibe-stage-181717?logo=github&logoColor=white" alt="GitHub"></a>
+  <a href="https://vibe.jiawen.live"><img src="https://img.shields.io/badge/Live_Demo-vibe.jiawen.live-success?logo=vercel&logoColor=white" alt="Live Demo"></a>
+  <a href="https://github.com/zzlw/lenovo-vibe-stage"><img src="https://img.shields.io/badge/GitHub-zzlw%2Flenovo--vibe--stage-181717?logo=github&logoColor=white" alt="GitHub"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License: MIT"></a>
   <a href="https://github.com/zzlw/lenovo-vibe-stage/commits/main"><img src="https://img.shields.io/github/last-commit/zzlw/lenovo-vibe-stage?logo=git&logoColor=white" alt="Last Commit"></a>
 </p>
@@ -11,7 +11,9 @@
 >
 > **整个分享会只有一个 URL**。PPT、录入弹窗、抽人弹窗、承诺墙弹窗都在 `frontend/index.html` 里。
 >
-> 🚀 **在线演示**：https://lenovo-vibe-stage.vercel.app
+> 🚀 **在线演示**：<https://vibe.jiawen.live>（国内直连；`*.vercel.app` 在国内常被墙，备用地址 <https://lenovo-vibe-stage.vercel.app>）
+>
+> 手机扫码直接进 <https://vibe.jiawen.live/#enroll>（录入）/ `#commit`（承诺墙）/ `#message`（留言墙）。
 >
 > 生产环境：Vercel（前端）+ Render（后端）+ Neon（PostgreSQL）。
 
@@ -47,6 +49,8 @@ cd lenovo-vibe-stage
 | 数据库 | Neon PostgreSQL 16 | 注入 `DATABASE_URL`；启动时 `ensureSchema()` 幂等建表 |
 
 Render 服务已部署：`https://lenovo-vibe-stage-api.onrender.com`。Vercel 环境变量 `BACKEND_URL` 指向该地址。免费档空闲约 15 分钟会休眠，第一次打开可能要等几十秒。
+
+自定义域名 `vibe.jiawen.live` 在 Cloudflare 走 **CNAME → `cname-china.vercel-dns.com`，灰云（DNS only，不要开橙色代理）**——橙云会同时破坏 Vercel 证书签发和中国节点解析。
 
 ---
 
@@ -122,6 +126,16 @@ lenovo-vibe-stage/
 
 ## 入口速查
 
+线上（任何网络都能开，手机已做响应式适配）：
+
+| 入口 | 地址 |
+|---|---|
+| **PPT** | <https://vibe.jiawen.live> |
+| 录入 / 抽人 / 承诺墙 / 留言墙 | `https://vibe.jiawen.live/#enroll` · `#pick` · `#commit` · `#message` |
+| 后端 API | <https://lenovo-vibe-stage-api.onrender.com> |
+
+本地（`./start.sh` 之后）：
+
 | 入口 | 地址 | 谁用 |
 |---|---|---|
 | **PPT（唯一入口）** | http://<LAN_IP>:8080 | 讲师投影 |
@@ -172,6 +186,7 @@ lenovo-vibe-stage/
 | 输入校验 | 名字 1-32 字符 + 控制字符过滤 / count 1-10 / commitment 4-280 | `backend/src/routes.js` |
 | 错误响应 | 业务态：`{ code, message }` + 合理 HTTP status | `backend/src/routes.js` |
 | 配置管理 | 12-factor，全部走环境变量 + `.env.example` 入库 | `docker-compose.yml` / `.env.example` |
+| 响应式 | 移动优先断点、`dvh` 视口高度、`env(safe-area-inset-*)` 刘海安全区、弹窗降级成全屏 sheet、iOS 输入框 ≥16px 防缩放 | `frontend/index.html` |
 | **工程化 AI** | CLAUDE.md / Cursor Rules / Hooks / Subagent | 项目根目录 4 个文件夹 |
 
 ---
