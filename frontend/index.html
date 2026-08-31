@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0e1a" />
 <title>Vibe Coding 工程化进阶 · Lenovo 开发团队 · 30 min</title>
 <!-- qrcodejs (davidshimjs/qrcodejs) · 19KB · 离线时也能扫到现成的二维码 -->
 <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js" defer></script>
@@ -37,6 +38,14 @@
                  "Helvetica Neue", Arial, sans-serif;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 移动端浏览器地址栏会吃掉 vh，dvh 才是可见高度 */
+  @supports (height: 100dvh) {
+    html, body { height: 100dvh; }
   }
 
   body::before {
@@ -49,16 +58,24 @@
     pointer-events: none; z-index: 0;
   }
 
-  .deck { position: relative; height: 100vh; width: 100vw; z-index: 1; }
+  .deck { position: relative; height: 100vh; width: 100%; z-index: 1; }
+  @supports (height: 100dvh) { .deck { height: 100dvh; } }
   .slide {
     position: absolute; inset: 0;
-    display: none; align-items: center; justify-content: center;
+    display: none; align-items: flex-start; justify-content: center;
     padding: 6vh 8vw;
+    overflow-y: auto; overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
     opacity: 0; transform: translateX(40px);
     transition: opacity 0.45s ease, transform 0.45s ease;
   }
   .slide.active { display: flex; opacity: 1; transform: translateX(0); }
-  .slide-inner { width: 100%; max-width: 1200px; }
+  /* 用 margin:auto 居中而不是 align-items:center——内容比屏幕高时顶部才不会被裁掉且滚不回去 */
+  .slide-inner { width: 100%; max-width: 1200px; margin: auto; }
+  .slide::-webkit-scrollbar { width: 6px; }
+  .slide::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 3px; }
+  .slide::-webkit-scrollbar-track { background: transparent; }
 
   /* 进度条 */
   .topbar {
@@ -111,6 +128,8 @@
   .topright {
     position: fixed; top: 40px; right: 18px; z-index: 20;
     display: flex; gap: 8px; pointer-events: auto;
+    flex-wrap: wrap; justify-content: flex-end;
+    max-width: calc(100vw - 36px);
   }
   .topright button {
     background: rgba(255,255,255,0.05); color: var(--muted);
@@ -188,6 +207,9 @@
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  /* 栅格子项默认 min-width:auto，里面的 pre.code 会把整页撑宽 */
+  .grid-2 > *, .grid-3 > *, .grid-4 > *,
+  .resources > *, .consensus > *, .arch > * { min-width: 0; }
 
   .card {
     background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
@@ -233,7 +255,8 @@
     border-radius: 10px; padding: 14px 16px;
     font-family: "JetBrains Mono", "Fira Code", monospace;
     font-size: 12.5px; color: #d6e3ff; line-height: 1.65;
-    overflow-x: auto;
+    max-width: 100%; overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   pre.code .k { color: #ff79c6; }
   pre.code .s { color: #f1fa8c; }
@@ -570,12 +593,15 @@
 
   /* topright 按钮（替代原 a.tp-link） */
   .topright .tp-btn {
+    display: inline-flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,0.05); color: var(--muted);
     border: 1px solid var(--border); border-radius: 8px;
     padding: 6px 12px; font-size: 12px; cursor: pointer;
     transition: all 0.2s; font-family: inherit;
+    text-decoration: none; white-space: nowrap;
   }
   .topright .tp-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+  .topright .tp-github:hover { border-color: rgba(255,255,255,0.35); }
 
   /* ============ Modal 弹窗（录入 / 抽人）============ */
   .modal-overlay {
@@ -1113,6 +1139,96 @@
   }
   .author-card .dot { margin: 0 6px; opacity: 0.5; }
 
+  /* ============ 移动端适配 ============
+     顺序必须排在上面所有 @media 之后：同特异性下靠后者生效。 */
+  @media (max-width: 900px) {
+    /* 手机一屏装不下整页 PPT，上下要给固定栏让出位置 */
+    .slide {
+      padding: calc(78px + env(safe-area-inset-top)) 16px calc(74px + env(safe-area-inset-bottom));
+    }
+    .slide-inner { max-width: 100%; }
+
+    /* 内容会从固定栏下面滚过去，加一层渐变遮罩免得糊在一起 */
+    .brand-strip {
+      top: 0; padding: calc(8px + env(safe-area-inset-top)) 14px 22px;
+      letter-spacing: 1px;
+      background: linear-gradient(180deg, var(--bg-0) 40%, transparent);
+    }
+    .brand-strip .dev-team, .brand-strip .tagline { display: none; }
+
+    .topright { top: calc(32px + env(safe-area-inset-top)); right: 12px; gap: 6px; }
+    /* 触摸目标不能比手指小 */
+    .topright .tp-btn, .topright button {
+      padding: 8px 10px; font-size: 14px;
+      min-width: 40px; min-height: 40px;
+    }
+    .tp-label { display: none; }
+
+    .footer {
+      bottom: 0; font-size: 11px;
+      padding: 20px 14px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(0deg, var(--bg-0) 45%, transparent);
+    }
+    .footer > div:first-child { display: none; }
+    .footer .nav { margin: 0 auto; }
+    .nav button { padding: 9px 16px; font-size: 15px; }
+
+    h2.section-title { margin-bottom: 16px; }
+    .card { padding: 16px; }
+    .consensus-col { padding: 16px; }
+    .move-header { gap: 12px; margin-bottom: 14px; }
+    .move-num { width: 48px; height: 48px; font-size: 22px; border-radius: 12px; }
+    pre.code { font-size: 11.5px; padding: 12px; border-radius: 8px; }
+    .cover .meta { gap: 14px 22px; }
+    .author-card { display: flex; width: 100%; padding: 12px 14px; gap: 12px; }
+
+    /* 二维码引导卡：横排三栏在手机上必挤，改竖排 */
+    .enroll-cta, .commit-cta {
+      flex-direction: column; align-items: stretch; gap: 12px; padding: 14px;
+    }
+    .enroll-cta .qr-box, .commit-cta .qr-box { margin: 0 auto; }
+
+    .roster-stage { padding: 22px 14px; border-radius: 18px; }
+    .roster-display { min-height: 92px; margin-bottom: 16px; }
+    .roster-meta { flex-direction: column; align-items: flex-start; }
+    .roster-btn, .pick-btn { padding: 12px 18px; }
+
+    /* 弹窗在手机上走全屏 sheet，比居中卡片更好按 */
+    .modal-overlay { padding: 0; align-items: stretch; }
+    .modal-card {
+      max-width: none; max-height: none; min-height: 100%;
+      border-radius: 0; border: none;
+      padding: calc(22px + env(safe-area-inset-top)) 16px calc(26px + env(safe-area-inset-bottom));
+    }
+    .modal-close { top: calc(14px + env(safe-area-inset-top)); right: 12px; }
+    /* 留出右上角关闭按钮的位置，标题行不要压到它下面 */
+    .modal-head { flex-wrap: wrap; gap: 8px; padding-right: 46px; }
+    .modal-head .live-pill { margin-right: 0; }
+    /* iOS 上字号小于 16px 的输入框会触发自动缩放 */
+    .enroll-form input, .commit-form input, .commit-form textarea,
+    .msg-form input, .msg-form textarea { font-size: 16px; }
+    .enroll-form button, .commit-form button, .msg-form button { width: 100%; }
+    /* 弹窗整体已经能滚，内部列表不必再套一层滚动区 */
+    ul.pick-history, ul.commit-list, ul.msg-list { max-height: none; }
+    .pick-stage { padding: 36px 14px 24px; border-radius: 18px; }
+    .pick-winner { font-size: clamp(38px, 13vw, 130px); word-break: break-word; }
+    .pick-winner-area { min-height: 130px; gap: 16px; }
+    .pick-meta { gap: 12px; flex-direction: column; align-items: center; }
+    ul.msg-list li .msg-del { opacity: 1; }
+  }
+
+  /* 横屏手机：高度很矮，固定栏要让位 */
+  @media (max-height: 480px) and (orientation: landscape) {
+    .slide { padding: 46px 5vw 54px; }
+    .topright { top: 26px; }
+    .footer { bottom: 6px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important; }
+  }
+
   /* ============ 打印样式（一键导出 PDF · Cmd/Ctrl+P 也走这个）============ */
   @media print {
     @page { size: A4 landscape; margin: 0; }
@@ -1137,6 +1253,8 @@
       break-after: page !important;
       opacity: 1 !important;
       transform: none !important;
+      overflow: visible !important;
+      align-items: center !important;
       width: 100vw !important;
       height: 100vh !important;
       padding: 4vh 5vw !important;
@@ -1161,16 +1279,22 @@
     <span class="lenovo-tag">LENOVO</span>
     <span class="dev-team">软件开发团队 · 内部分享</span>
   </div>
-  <div>VIBE CODING · 工程化进阶 · 30 MIN</div>
+  <div class="tagline">VIBE CODING · 工程化进阶 · 30 MIN</div>
 </div>
 
 <div class="topright">
-  <button class="tp-btn" onclick="openModal('enroll')">📝 录入</button>
-  <button class="tp-btn" onclick="openModal('pick')">🎯 抽人</button>
-  <button class="tp-btn" onclick="openModal('commit')">🤝 承诺</button>
-  <button class="tp-btn" onclick="openModal('message')">💬 留言</button>
-  <button class="tp-btn" onclick="exportPDF()" title="导出 PDF（也可按 Cmd/Ctrl+P）">📥 PDF</button>
-  <button onclick="toggleFs()">⛶</button>
+  <button class="tp-btn" onclick="openModal('enroll')">📝<span class="tp-label"> 录入</span></button>
+  <button class="tp-btn" onclick="openModal('pick')">🎯<span class="tp-label"> 抽人</span></button>
+  <button class="tp-btn" onclick="openModal('commit')">🤝<span class="tp-label"> 承诺</span></button>
+  <button class="tp-btn" onclick="openModal('message')">💬<span class="tp-label"> 留言</span></button>
+  <button class="tp-btn" onclick="exportPDF()" title="导出 PDF（也可按 Cmd/Ctrl+P）">📥<span class="tp-label"> PDF</span></button>
+  <a class="tp-btn tp-github" href="https://github.com/zzlw/lenovo-vibe-stage"
+     target="_blank" rel="noopener noreferrer" title="在 GitHub 上看源码" aria-label="在 GitHub 上看源码">
+    <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+    </svg><span class="tp-label"> GitHub</span>
+  </a>
+  <button class="tp-btn tp-fs" onclick="toggleFs()" title="全屏 (F)" aria-label="全屏">⛶</button>
 </div>
 
 <div class="deck" id="deck">
@@ -1905,13 +2029,20 @@ http://<span class="lan-host">本机IP</span>:8080
 <script>
   /* ===== 翻页 ===== */
   const slides = Array.from(document.querySelectorAll('.slide'));
+  const MODAL_HASHES = ['#enroll', '#pick', '#commit', '#message'];
   let idx = 0;
   function render() {
-    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    slides.forEach((s, i) => {
+      s.classList.toggle('active', i === idx);
+      if (i === idx) s.scrollTop = 0;
+    });
     const pct = ((idx + 1) / slides.length) * 100;
     document.getElementById('progress').style.width = pct + '%';
     document.getElementById('counter').textContent = (idx + 1) + ' / ' + slides.length;
-    if (location.hash !== '#' + (idx + 1)) history.replaceState(null, '', '#' + (idx + 1));
+    // 扫码进来的 #enroll 之类要留着给 maybeOpenFromHash，页码 hash 不能盖掉它
+    if (!MODAL_HASHES.includes(location.hash) && location.hash !== '#' + (idx + 1)) {
+      history.replaceState(null, '', '#' + (idx + 1));
+    }
   }
   function go(delta) { idx = Math.max(0, Math.min(slides.length - 1, idx + delta)); render(); }
   function gotoIndex(i) { idx = Math.max(0, Math.min(slides.length - 1, i)); render(); }
@@ -1959,14 +2090,23 @@ http://<span class="lan-host">本机IP</span>:8080
       else gotoIndex(n - 1);
     }
   });
-  let touchX = null;
-  document.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; });
+  let touchX = null, touchY = null;
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) { touchX = touchY = null; return; }
+    touchX = e.touches[0].clientX;
+    touchY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchcancel', () => { touchX = touchY = null; }, { passive: true });
   document.addEventListener('touchend', (e) => {
     if (touchX === null) return;
     const dx = e.changedTouches[0].clientX - touchX;
-    if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
-    touchX = null;
-  });
+    const dy = e.changedTouches[0].clientY - touchY;
+    touchX = touchY = null;
+    // 弹窗自己滚，翻页手势不能穿透过去
+    if (document.body.classList.contains('modal-open')) return;
+    // 手机上每页都能纵向滚动，只有明显偏水平的滑动才算翻页
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.6) go(dx < 0 ? 1 : -1);
+  }, { passive: true });
   if (location.hash) {
     const n = parseInt(location.hash.slice(1), 10);
     if (!isNaN(n)) gotoIndex(n - 1);
@@ -2203,7 +2343,7 @@ http://<span class="lan-host">本机IP</span>:8080
   function closeModal() {
     document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
     document.body.classList.remove('modal-open');
-    if (['#enroll', '#pick', '#commit', '#message'].includes(location.hash)) {
+    if (MODAL_HASHES.includes(location.hash)) {
       history.replaceState(null, '', '#' + (idx + 1));
     }
   }

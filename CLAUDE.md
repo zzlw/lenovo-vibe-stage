@@ -58,6 +58,11 @@
 - 字体只用：系统字体 + JetBrains Mono（mono 类）。
 - 弹窗（modal）一律：暗色遮罩 + 中央卡片 + ESC 关闭 + 点遮罩关闭 + URL hash 路由。
 - API 调用统一走顶部的 `apiCall(path, opts)`，不要散落 `fetch`。
+- 响应式主断点是 `≤900px`（手机 / 竖屏平板），另有 `≤480px 横屏`。文件里还留着更早的 `880 / 720 / 600px` 块（只管栅格列数和弹窗内边距）。新样式**一律写进已有的 `@media` 块，不要再开新断点**；`≤900px` 块必须排在其它块之后，同特异性下靠后者才生效。
+  - 视口高度用 `100dvh`（`@supports` 兜底 `100vh`），不要裸写 `100vh`。
+  - 贴边的固定元素（顶栏 / 底栏 / 弹窗）必须叠 `env(safe-area-inset-*)`。
+  - 栅格子项要给 `min-width: 0`，否则里面的 `pre.code` 会把整页撑出横向滚动。
+  - 手机上输入框字号不得小于 `16px`（iOS 会自动放大页面）。
 
 ### Database
 
@@ -83,6 +88,7 @@
 ## 4 · Don't（红线）
 
 - ❌ 不要在 frontend 里硬编码 IP、端口、URL（用 `window.location` 或调 `/api/server-info`）
+  - 豁免：与部署环境无关的固定外链（CDN `script src`、GitHub 仓库地址）可以写死。
 - ❌ 不要用 `alert()`/`confirm()`/`prompt()`（用 `enrollToast` 或自定义 modal）
 - ❌ 不要在 backend 直接 `throw new Error('xxx')`——要 `const err = new Error(); err.status = 4xx; throw err;`
 - ❌ 不要在 SQL 里拼接字符串（参数化只有这一条路）
@@ -142,4 +148,4 @@ docker compose down
 ---
 
 > 维护人：张展亮（itcode: zhangzl39，Lenovo 大前端 · Studio AI）
-> 上次更新：2026-05-08（首版）
+> 上次更新：2026-08-31（补 §3 前端响应式约定）
